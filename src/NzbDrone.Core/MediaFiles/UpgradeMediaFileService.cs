@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using System.Linq;
 using NLog;
 using NzbDrone.Common.Disk;
@@ -44,7 +44,20 @@ namespace NzbDrone.Core.MediaFiles
             _logger.Trace("Upgrading existing movie file.");
             var moveFileResult = new MovieFileMoveResult();
 
-            var existingFile = localMovie.Movie.MovieFile.Value;
+            var existingFile = localMovie.Movie.MovieFile.Value;          
+
+		//Temporary for correctly getting path
+		localMovie.Movie.MovieFileId = 1;
+		localMovie.Movie.MovieFile = movieFile;
+
+            if (copyOnly)
+            {
+                moveFileResult.MovieFile = _movieFileMover.CopyMovieFile(movieFile, localMovie);
+            }
+            else
+            {
+                moveFileResult.MovieFile = _movieFileMover.MoveMovieFile(movieFile, localMovie);
+            }
 
             if (existingFile != null)
             {
@@ -60,20 +73,7 @@ namespace NzbDrone.Core.MediaFiles
                 _mediaFileService.Delete(existingFile, DeleteMediaFileReason.Upgrade);
             }
 
-		//Temporary for correctly getting path
-		localMovie.Movie.MovieFileId = 1;
-		localMovie.Movie.MovieFile = movieFile;
-
-            if (copyOnly)
-            {
-                moveFileResult.MovieFile = _movieFileMover.CopyMovieFile(movieFile, localMovie);
-            }
-            else
-            {
-                moveFileResult.MovieFile = _movieFileMover.MoveMovieFile(movieFile, localMovie);
-            }
-
-		//_movieFileRenamer.RenameMoviePath(localMovie.Movie, false);
+            //_movieFileRenamer.RenameMoviePath(localMovie.Movie, false);
 
             return moveFileResult;
         }
